@@ -1,0 +1,51 @@
+name: Deploy DataDog Terraform Rules
+
+# Controls when the action will run
+on:
+  # Triggers the workflow on push events but only for the "main" branch
+  push:
+    branches:
+      - main
+  
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # This workflow contains a single job called "terraform"
+  terraform:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Installs and sets up the Terraform CLI
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0 # Specify a Terraform version
+
+      # Initializes the Terraform working directory
+      # This downloads the necessary providers (like the DataDog provider)
+      - name: Terraform Init
+        run: terraform init
+        env:
+          # Use the secrets to authenticate with DataDog
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_APP_KEY: ${{ secrets.DATADOG_APP_KEY }}
+
+      # Generates an execution plan to see what changes will be made
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        env:
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_APP_KEY: ${{ secrets.DATADOG_APP_KEY }}
+
+      # Applies the changes to your DataDog account
+      # The -auto-approve flag is used for non-interactive CI/CD pipelines
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        env:
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATADOG_APP_KEY: ${{ secrets.DATADOG_APP_KEY }}
