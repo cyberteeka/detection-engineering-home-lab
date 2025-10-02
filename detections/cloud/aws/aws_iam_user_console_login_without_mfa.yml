@@ -1,1 +1,38 @@
-
+title: Console Login without MFA # The human-readable title
+id: f47ac10b-58cc-4372-a567-0e02b2c3d479 # A unique identifier for the rule
+status: experimental # The development status (stable, experimental, etc.)
+description: >       # A detailed explanation of what the rule detects
+    Detects when a user logs into the AWS Management Console without using Multi-Factor Authentication (MFA). 
+    This is a critical security control that helps protect against unauthorized access.
+author: 'Goodness Adediran' # Who wrote the rule
+date: 2025-08-23            # When the rule was created or last modified
+references:                 # Links to related articles, attack descriptions, etc.
+   - https://expel.com/blog/incident-report-from-cli-to-console-chasing-an-attacker-in-aws/
+   - https://naikordian.github.io/blog/posts/brute-force-aws-console/
+   - https://aws-samples.github.io/threat-technique-catalog-for-aws/Techniques/T1078.A002.html
+   - https://attack.mitre.org/techniques/T1098/001/
+   - https://attack.mitre.org/techniques/T1078/004/
+logsource:                 # Defines where the logs come from
+    product: aws
+    service: cloudtrail
+detection:                 # The core logic of the rule
+    selection:
+        eventName: 'ConsoleLogin'
+        eventSource: 'signin.amazonaws.com'
+        additionalEventData.MFAUsed: 'No'
+        responseElements.ConsoleLogin: "Success"
+        userIdentity.type: "IAMUser"
+    condition: selection  # The condition that must be met forthe rule to trigger
+falsepositives:
+    - Legitimate users who have not enrolled in MFA.
+    - Legitimate users who are using temporary credentials that do not support MFA.
+    - Users accessing the console from trusted networks where MFA is not enforced.
+level: high             # The severity of the finding
+tags:                   # MITRE ATT&CK mapping and other metadata
+    - attack.initial_access
+    - attack.privilege_escalation
+    - attack.persistence
+    - attack.defense_evasion
+    - attack.t1078.004
+    - attack.t1078.001
+    - attack.t1098.001
